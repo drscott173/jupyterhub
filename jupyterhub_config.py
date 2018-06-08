@@ -31,17 +31,24 @@ c.JupyterHub.cookie_secret_file = pjoin(runtime_dir, 'cookie_secret')
 #c.JupyterHub.db_url = pjoin(runtime_dir, 'jupyterhub.sqlite')
 
 # use GitHub OAuthenticator for local users
-c.JupyterHub.authenticator_class = 'oauthenticator.GitHubOAuthenticator'
-c.GitHubOAuthenticator.oauth_callback_url = 'https://scott.ai/hub/oauth_callback'
-c.GitHubOAuthenticator.client_id = '91b6655938d7c5baba1c'
-c.GitHubOAuthenticator.client_secret = '695cf311902e5aa13a0ae904c2b2e8b13040c7a0'
+#c.JupyterHub.authenticator_class = 'oauthenticator.GitHubOAuthenticator'
+#c.GitHubOAuthenticator.oauth_callback_url = 'https://scott.ai/hub/oauth_callback'
+#c.GitHubOAuthenticator.client_id = '91b6655938d7c5baba1c'
+#c.GitHubOAuthenticator.client_secret = '695cf311902e5aa13a0ae904c2b2e8b13040c7a0'
+
+
+# use Google OAuthenticator for local users
+c.JupyterHub.authenticator_class = 'oauthenticator.GoogleOAuthenticator'
+c.GoogleOAuthenticator.oauth_callback_url = 'https://scott.ai/hub/oauth_callback'
+c.GoogleOAuthenticator.client_id = '173278311477-ehlhp48bv613ivolkd0cms4u79voa0b6.apps.googleusercontent.com'
+c.GoogleOAuthenticator.client_secret = 'G_SKaQIjYGOWw6rV3cBwJ1QD'
 
 # create system users that don't exist yet
 c.LocalAuthenticator.create_system_users = True
 
 # specify users and admin
-c.Authenticator.whitelist = {'drscott173'}
-c.Authenticator.admin_users = {'drscott173'}
+c.Authenticator.whitelist = {'drscott173', 'scott.penberthy@gmail.com'}
+c.Authenticator.admin_users = {'drscott173', 'scott.penberthy@gmail.com'}
 
 # no memory limit
 #c.Spawner.notebook_dir = 'notebooks'
@@ -56,10 +63,16 @@ c.DockerSpawner.network_name = network_name
 # and ensure we use Nvidia for GPU access
 
 c.JupyterHub.spawner_class = 'dockerspawner.DockerSpawner'
-c.DockerSpawner.image = 'jupyter/singleuser:latest'
+c.DockerSpawner.image = 'gcr.io/udacity-fcn/singleuser'
 c.DockerSpawner.extra_host_config = {"runtime":"nvidia",
                                      'network_mode': network_name }
-c.DockerSpawner.volumes = { 'jh-user-{username}': notebook_dir }
+
+# use safe volume names
+def use_safe_volumes(template, spawner):
+   return template.format(username=spawner.escaped_name)
+
+c.DockerSpawner.format_volume_name = use_safe_volumes
+c.DockerSpawner.volumes = {'jh-user-{username}': notebook_dir }
 
 # Remove containers once they are stopped
 c.DockerSpawner.remove_containers = True
